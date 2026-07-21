@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from fastapi import APIRouter
 
 from services.anthropic_client import generate
-
+#/api/generate
 router = APIRouter(prefix="/api", tags=["generate"])
 
 class GenerateRequest(BaseModel):

@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f7f4;
+      --surface: #ffffff;
+      --surface-2: #f2f1ee;
+      --border: #e2e0db;
+      --border-strong: #c8c5be;
+      --text-primary: #1a1916;
+      --text-secondary: #5c5a55;
+      --text-muted: #9c9a95;
+      --accent: #1a56db;
+      --accent-bg: #eff4ff;
+      --accent-border: #bfcef8;
+      --accent-text: #1a40b0;
+      --radius: 8px;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141412;
+        --surface: #1e1d1b;
+        --surface-2: #252422;
+        --border: #2e2c28;
+        --border-strong: #3d3b36;
+        --text-primary: #f0ede8;
+        --text-secondary: #a8a49c;
+        --text-muted: #6b6860;
+        --accent: #5b8dee;
+        --accent-bg: #1a2340;
+        --accent-border: #2a3a6a;
+        --accent-text: #90aef0;
+      }
+    }
+
+    body { font-family: var(--font); background: var(--bg); color: var(--text-primary); min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 820px; margin: 0 auto; }
+
+    /* Header */
+    .header { margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border); }
+    .header-eyebrow { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .header-title { font-size: 20px; font-weight: 600; }
+    .header-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+    .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .client-switcher { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0; }
+    .client-switcher-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+    .client-select { font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--text-primary); background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 7px 30px 7px 11px; cursor: pointer; min-width: 200px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239c9a95' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; }
+    .client-select:focus { outline: none; border-color: var(--accent); }
+
+    /* Panel tabs */
+    .panel-tabs { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.75rem; }
+    .panel-tab { flex: 1; padding: 10px 16px; font-size: 13px; font-weight: 500; font-family: var(--font); border: none; border-right: 0.5px solid var(--border); cursor: pointer; background: var(--surface-2); color: var(--text-secondary); transition: all 0.15s; }
+    .panel-tab:last-child { border-right: none; }
+    .panel-tab:hover { color: var(--text-primary); background: var(--surface); }
+    .panel-tab.active { background: var(--surface); color: var(--text-primary); }
+
+    /* Field label */
+    .field-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+
+    /* Format tabs */
+    .format-tabs-wrap { position: relative; margin-bottom: 1.25rem; }
+    .format-tabs-wrap::before, .format-tabs-wrap::after { content: ''; position: absolute; top: 1px; bottom: 1px; width: 36px; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 2; }
+    .format-tabs-wrap::before { left: 1px; border-top-left-radius: var(--radius); border-bottom-left-radius: var(--radius); background: linear-gradient(to right, var(--surface-2), transparent); }
+    .format-tabs-wrap::after { right: 1px; border-top-right-radius: var(--radius); border-bottom-right-radius: var(--radius); background: linear-gradient(to left, var(--surface-2), transparent); }
+    .format-tabs-wrap.can-left::before { opacity: 1; }
+    .format-tabs-wrap.can-right::after { opacity: 1; }
+    .fmt-scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; width: 22px; height: 100%; border: none; background: none; color: var(--text-muted); font-size: 17px; font-weight: 300; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; transition: color 0.15s; }
+    .fmt-scroll-arrow:hover { color: var(--text-primary); }
+    .fmt-arrow-left { left: 0; }
+    .fmt-arrow-right { right: 0; }
+    .format-tabs-wrap.can-left  .fmt-arrow-left  { display: flex; }
+    .format-tabs-wrap.can-right .fmt-arrow-right { display: flex; }
+    .format-tabs { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius); overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+    .fmt-tab { flex: 1 0 auto; white-space: nowrap; padding: 9px 14px; font-size: 13px; font-family: var(--font); background: var(--surface-2); border: none; border-right: 0.5px solid var(--border); cursor: pointer; color: var(--text-secondary); transition: all 0.15s; }
+    .fmt-tab:last-child { border-right: none; }
+    .fmt-tab:hover { color: var(--text-primary); background: var(--surface); }
+    .fmt-tab.active { background: var(--surface); color: var(--text-primary); font-weight: 500; }
+
+    /* Input grid */
+    .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.25rem; }
+    @media (max-width: 560px) { .input-grid { grid-template-columns: 1fr; } }
+
+    textarea, input[type="text"] { width: 100%; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-size: 14px; font-family: var(--font); color: var(--text-primary); transition: border-color 0.15s; outline: none; }
+    textarea { min-height: 90px; resize: vertical; }
+    textarea:focus, input:focus { border-color: var(--border-strong); }
+    textarea::placeholder, input::placeholder { color: var(--text-muted); }
+
+    /* Angle buttons */
+    .angle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.25rem; }
+    @media (max-width: 560px) { .angle-grid { grid-template-columns: 1fr 1fr; } }
+    .angle-btn { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-size: 12px; font-family: var(--font); color: var(--text-secondary); cursor: pointer; text-align: left; transition: all 0.15s; line-height: 1.4; }
+    .angle-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+    .angle-btn.selected { border-color: var(--accent-border); background: var(--accent-bg); color: var(--accent-text); }
+    .angle-btn strong { display: block; font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+
+    /* News chips */
+    .news-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
+    .news-chip { font-size: 12px; background: var(--surface); border: 0.5px solid var(--border); border-radius: 20px; padding: 5px 12px; cursor: pointer; color: var(--text-secondary); transition: all 0.15s; font-family: var(--font); }
+    .news-chip:hover { border-color: var(--border-strong); color: var(--text-primary); }
+    .news-chip.active { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent-text); }
+    .niche-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .niche-chip { font-size: 12px; background: var(--surface); border: 0.5px solid var(--border); border-radius: 20px; padding: 5px 12px; cursor: pointer; color: var(--text-secondary); transition: all 0.15s; font-family: var(--font); }
+    .niche-chip:hover { border-color: var(--border-strong); color: var(--text-primary); }
+    .niche-chip.active { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent-text); }
+
+    /* Buttons */
+    .generate-btn { width: 100%; padding: 11px; font-size: 14px; font-weight: 500; font-family: var(--font); cursor: pointer; border-radius: var(--radius); background: var(--text-primary); border: none; color: var(--bg); transition: opacity 0.15s; margin-bottom: 1.75rem; }
+    .generate-btn:hover { opacity: 0.88; }
+    .generate-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .rag-toggle { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; margin-bottom: 1rem; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; }
+    .rag-toggle:hover { border-color: var(--border-strong); }
+    .rag-toggle input { width: auto; margin-top: 2px; cursor: pointer; flex-shrink: 0; }
+    .rag-toggle-text { display: flex; flex-direction: column; gap: 2px; }
+    .rag-toggle-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .rag-toggle-sub { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+    hr { border: none; border-top: 0.5px solid var(--border); margin: 0 0 1.5rem; }
+
+    /* Output */
+    .output-area { display: none; }
+    .output-area.visible { display: block; }
+    .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .output-label { font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; }
+    .output-actions { display: flex; gap: 8px; align-items: center; }
+    .action-btn { font-size: 12px; color: var(--text-secondary); background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 5px 12px; cursor: pointer; font-family: var(--font); transition: all 0.15s; }
+    .action-btn:hover { color: var(--text-primary); border-color: var(--border-strong); }
+    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .draft-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; font-size: 15px; line-height: 1.75; color: var(--text-primary); white-space: pre-wrap; min-height: 120px; }
+    .char-count { font-size: 11px; color: var(--text-muted); text-align: right; margin-top: 6px; }
+    .regen-steer { margin-top: 12px; padding: 12px 14px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); }
+    .regen-textarea { min-height: 56px !important; margin-top: 6px; }
+    .regen-steer-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+    .rationale-box { margin-top: 10px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; }
+    .rationale-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+    .rationale-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+    .compliance-note { font-size: 11px; color: var(--text-muted); margin-top: 10px; display: flex; gap: 5px; align-items: flex-start; }
+
+    /* Loading dots */
+    .loading-dots { display: inline-flex; gap: 4px; align-items: center; }
+    .loading-dots span { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.4; animation: dot-pulse 1.2s ease-in-out infinite; }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dot-pulse { 0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)} }
+
+    .section { margin-bottom: 1.25rem; }
+
+    /* ── Social Intelligence ────────────────────────────────────────────────── */
+    .monitor-bar { display: flex; gap: 8px; }
+    .monitor-bar input { flex: 1; }
+    .monitor-btn { padding: 0 20px; font-size: 13px; font-weight: 500; font-family: var(--font); background: var(--text-primary); color: var(--bg); border: none; border-radius: var(--radius); cursor: pointer; white-space: nowrap; transition: opacity 0.15s; flex-shrink: 0; }
+    .monitor-btn:hover { opacity: 0.85; }
+    .monitor-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .platform-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ptoggle { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--surface); border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 12px; font-family: var(--font); color: var(--text-secondary); transition: all 0.15s; user-select: none; }
+    .ptoggle input[type="checkbox"] { display: none; }
+    .ptoggle.on { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent-text); }
+    .ptoggle:hover { border-color: var(--border-strong); }
+    .ptoggle .pdot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+    .ptoggle.on .pdot { opacity: 1; }
+
+    .platform-group { margin-bottom: 1rem; }
+    .platform-group-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .platform-badge { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; color: #fff; }
+    .platform-group-count { font-size: 11px; color: var(--text-muted); }
+
+    .result-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; transition: border-color 0.15s; overflow: hidden; }
+    .result-card:hover { border-color: var(--border-strong); }
+    .result-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; }
+    .result-card-header-text { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .result-title-text { font-size: 13px; font-weight: 500; color: var(--text-primary); line-height: 1.45; }
+    .result-snippet-preview { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .result-expand-icon { font-size: 11px; color: var(--text-muted); flex-shrink: 0; margin-top: 2px; transition: transform 0.15s; }
+    .result-card-body { display: none; padding: 0 14px 12px; border-top: 0.5px solid var(--border); padding-top: 10px; }
+    .result-card.open .result-card-body { display: block; }
+    .result-snippet { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; white-space: pre-wrap; }
+    .result-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .result-card-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+    .summarize-btn { font-size: 11px; font-weight: 500; background: var(--accent-bg); color: var(--accent-text); border: 0.5px solid var(--accent-border); border-radius: 5px; padding: 5px 10px; cursor: pointer; transition: background 0.15s; }
+    .summarize-btn:hover:not(:disabled) { background: var(--accent-border); }
+    .summarize-btn:disabled { opacity: 0.6; cursor: default; }
+    .visit-source-btn { font-size: 11px; font-weight: 500; color: var(--accent); text-decoration: none; padding: 5px 0; }
+    .visit-source-btn:hover { text-decoration: underline; }
+    .use-in-generator-btn { font-size: 11px; font-weight: 500; background: var(--accent); color: #fff; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; transition: opacity 0.15s; }
+    .use-in-generator-btn:hover { opacity: 0.85; }
+    .result-ai-summary { display: none; font-size: 12px; color: var(--text-primary); background: var(--accent-bg); border: 0.5px solid var(--accent-border); border-radius: 6px; padding: 10px 12px; line-height: 1.6; margin-top: 8px; white-space: pre-wrap; }
+
+    /* Trending */
+    .trending-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 1.5rem; }
+    .trending-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+    .trending-subtitle { font-size: 12px; color: var(--text-muted); }
+    .trending-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+    .trending-topic-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; }
+    .trending-topic-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-text); background: var(--accent-bg); border: 0.5px solid var(--accent-border); border-radius: 4px; padding: 2px 8px; display: inline-block; margin-bottom: 10px; }
+    .trending-item { padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+    .trending-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .trending-item-title { font-size: 12px; font-weight: 500; color: var(--text-primary); line-height: 1.45; margin-bottom: 4px; }
+    .trending-item-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .trending-item-source { font-size: 11px; color: var(--text-muted); }
+    .trending-item-actions { display: flex; gap: 8px; align-items: center; }
+    .trending-use-btn { font-size: 10px; font-weight: 500; background: var(--accent); color: #fff; border: none; border-radius: 4px; padding: 3px 8px; cursor: pointer; opacity: 0; transition: opacity 0.15s; white-space: nowrap; }
+    .trending-item:hover .trending-use-btn { opacity: 1; }
+    .trending-visit-btn { font-size: 10px; color: var(--text-muted); text-decoration: none; }
+    .trending-visit-btn:hover { color: var(--accent); }
+    .trending-empty { font-size: 12px; color: var(--text-muted); padding: 6px 0; }
+    .trending-loading { text-align: center; padding: 3rem 0; color: var(--text-muted); font-size: 13px; }
+    .trending-view-toggle { display: flex; border: 0.5px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .tview-btn { padding: 6px 14px; font-size: 12px; font-weight: 500; font-family: var(--font); background: var(--surface-2); color: var(--text-secondary); border: none; border-right: 0.5px solid var(--border); cursor: pointer; transition: all 0.15s; }
+    .tview-btn:last-child { border-right: none; }
+    .tview-btn.active { background: var(--surface); color: var(--text-primary); }
+    .digest-sections { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; margin-top: 4px; }
+    .digest-section { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .digest-section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-text); background: var(--accent-bg); border: 0.5px solid var(--accent-border); border-radius: 4px; padding: 2px 8px; display: inline-block; margin-bottom: 10px; }
+    .digest-section-summary { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+    .digest-headline { font-size: 12px; color: var(--text-primary); line-height: 1.45; padding: 5px 0; border-top: 0.5px solid var(--border); display: flex; align-items: flex-start; gap: 6px; }
+    .digest-headline::before { content: "—"; color: var(--text-muted); flex-shrink: 0; margin-top: 1px; }
+    .digest-loading { text-align: center; padding: 3rem 0; color: var(--text-muted); font-size: 13px; }
+    .digest-error { font-size: 12px; color: var(--text-muted); padding: 1rem 0; }
+    .whats-working-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 0.5px solid var(--border); }
+    .whats-working-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 1.25rem; }
+    .whats-working-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+    .ww-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .ww-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .ww-card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
+    .ww-card-title.leads     { background: #ecfdf5; color: #065f46; border: 0.5px solid #a7f3d0; }
+    .ww-card-title.sales     { background: #fff7ed; color: #92400e; border: 0.5px solid #fcd34d; }
+    .ww-card-title.content   { background: #f5f3ff; color: #5b21b6; border: 0.5px solid #ddd6fe; }
+    @media (prefers-color-scheme: dark) {
+      .ww-card-title.leads   { background: #064e3b; color: #6ee7b7; border-color: #065f46; }
+      .ww-card-title.sales   { background: #451a03; color: #fcd34d; border-color: #78350f; }
+      .ww-card-title.content { background: #2e1065; color: #c4b5fd; border-color: #4c1d95; }
+    }
+    .ww-summary { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+    .ww-bullet { font-size: 12px; color: var(--text-primary); line-height: 1.5; padding: 5px 0; border-top: 0.5px solid var(--border); display: flex; gap: 6px; }
+    .ww-bullet::before { content: "→"; color: var(--accent); flex-shrink: 0; font-weight: 600; }
+
+    /* Compliance */
+    .compliance-box { margin-top: 10px; border-radius: var(--radius); border: 0.5px solid; padding: 12px 14px; }
+    .compliance-box.pass { background: #f0fdf4; border-color: #86efac; }
+    .compliance-box.warn { background: #fffbeb; border-color: #fcd34d; }
+    .compliance-box.fail { background: #fef2f2; border-color: #fca5a5; }
+    @media (prefers-color-scheme: dark) {
+      .compliance-box.pass { background: #052e16; border-color: #166534; }
+      .compliance-box.warn { background: #1c1000; border-color: #78350f; }
+      .compliance-box.fail { background: #1c0000; border-color: #7f1d1d; }
+    }
+    .compliance-box-header { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+    .compliance-box-body { font-size: 12px; line-height: 1.7; color: var(--text-primary); white-space: pre-wrap; }
+    .compliance-flag { display: flex; gap: 8px; padding: 5px 0; border-top: 0.5px solid var(--border); font-size: 12px; line-height: 1.5; }
+    .compliance-flag-icon { flex-shrink: 0; }
+
+    /* Campaigns */
+    .campaign-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 1.25rem; }
+    .campaign-select { width: 100%; padding: 8px 10px; font-size: 13px; font-family: var(--font); background: var(--surface); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; }
+    .campaign-select:focus { outline: none; border-color: var(--accent); }
+    .email-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
+    .email-card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface-2); border-bottom: 0.5px solid var(--border); }
+    .email-card-num { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-text); background: var(--accent-bg); border: 0.5px solid var(--accent-border); border-radius: 4px; padding: 2px 8px; }
+    .email-card-subject { font-size: 13px; font-weight: 500; color: var(--text-primary); flex: 1; margin: 0 12px; }
+    .email-card-copy { font-size: 11px; font-weight: 500; background: transparent; color: var(--text-muted); border: 0.5px solid var(--border); border-radius: 4px; padding: 3px 10px; cursor: pointer; white-space: nowrap; }
+    .email-card-copy:hover { color: var(--text-primary); border-color: var(--border-strong); }
+    .email-card-body { padding: 14px 16px; }
+    .email-field-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 3px; }
+    .email-preview-text { font-size: 12px; color: var(--text-secondary); font-style: italic; margin-bottom: 12px; }
+    .email-body-text { font-size: 13px; color: var(--text-primary); line-height: 1.7; white-space: pre-wrap; margin-bottom: 12px; }
+    .email-cta { font-size: 12px; font-weight: 500; color: var(--accent-text); background: var(--accent-bg); border: 0.5px solid var(--accent-border); border-radius: 5px; padding: 7px 14px; display: inline-block; }
+
+    .analysis-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; font-size: 13px; line-height: 1.8; color: var(--text-primary); white-space: pre-wrap; min-height: 80px; }
+
+    .section-divider { display: flex; align-items: center; gap: 12px; margin: 1.75rem 0 1.25rem; }
+    .section-divider-line { flex: 1; height: 0.5px; background: var(--border); }
+    .section-divider-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+
+    .empty-state { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 13px; }
+    .help-text { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="header-row">
+      <div>
+        <p class="header-eyebrow">Craft Impact</p>
+        <h1 class="header-title">Content + Intelligence</h1>
+        <p class="header-sub">Content Engine &amp; Social Monitor</p>
+      </div>
+      <div class="client-switcher">
+        <label class="client-switcher-label" for="client-select">Client</label>
+        <select id="client-select" class="client-select"></select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Panel tabs -->
+  <div class="panel-tabs">
+    <button class="panel-tab active" data-panel="content">Content Generator</button>
+    <button class="panel-tab" data-panel="trending">Trending Topics</button>
+    <button class="panel-tab" data-panel="intelligence">Social Intelligence</button>
+    <button class="panel-tab" data-panel="campaigns">Campaigns</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       CONTENT GENERATOR
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div id="content-panel">
+
+    <div class="section">
+      <label class="field-label">Output format</label>
+      <div class="format-tabs-wrap" id="format-tabs-wrap">
+        <button class="fmt-scroll-arrow fmt-arrow-left" id="fmt-arrow-left" aria-label="Scroll left" type="button">‹</button>
+        <button class="fmt-scroll-arrow fmt-arrow-right" id="fmt-arrow-right" aria-label="Scroll right" type="button">›</button>
+        <div class="format-tabs" id="format-tabs" role="tablist">
+          <button class="fmt-tab active" data-fmt="linkedin" role="tab" aria-selected="true">LinkedIn post</button>
+          <button class="fmt-tab" data-fmt="podcast" role="tab" aria-selected="false">Podcast talking points</button>
+          <button class="fmt-tab" data-fmt="newsletter" role="tab" aria-selected="false">Newsletter blurb</button>
+          <button class="fmt-tab" data-fmt="news_reaction" role="tab" aria-selected="false">News reaction</button>
+          <button class="fmt-tab" data-fmt="instagram" role="tab" aria-selected="false">Instagram post</button>
+          <button class="fmt-tab" data-fmt="youtube" role="tab" aria-selected="false">YouTube video</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-grid">
+      <div>
+        <label class="field-label" for="topic-input">Topic or news item</label>
+        <textarea id="topic-input" placeholder="e.g. Schwab's new $5 block-trading fee — what it means for RIAs..."></textarea>
+      </div>
+      <div>
+        <label class="field-label" for="goal-input">Goal for this piece (optional)</label>
+        <textarea id="goal-input" placeholder="e.g. Position Stephen as someone who cuts through the noise — give RIAs a clear take, not panic..."></textarea>
+      </div>
+    </div>
+
+    <div class="section">
+      <label class="field-label" for="audience-input">Target audience / niche (optional)</label>
+      <input type="text" id="audience-input" placeholder="e.g. advisors who serve dentists · pre-retirees selling a business · next-gen inheritors…" />
+      <div class="niche-chips" id="niche-chips"></div>
+    </div>
+
+    <div class="section">
+      <label class="field-label">Angle — pick one or leave blank</label>
+      <div class="angle-grid">
+        <button class="angle-btn" data-angle="contrarian"><strong>Contrarian take</strong>Here's what everyone's missing</button>
+        <button class="angle-btn" data-angle="framework"><strong>Framework</strong>Break it into steps or a model</button>
+        <button class="angle-btn" data-angle="story"><strong>Story-led</strong>Open with a client moment or anecdote</button>
+        <button class="angle-btn" data-angle="practical"><strong>Practical next step</strong>Here's exactly what to do</button>
+        <button class="angle-btn" data-angle="industry"><strong>Industry signal</strong>What this news means for your firm</button>
+        <button class="angle-btn" data-angle="myth"><strong>Myth-bust</strong>The conventional wisdom is wrong</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <label class="field-label">Live RIA news — click to populate topic</label>
+      <div class="news-chips" id="news-chips">
+        <button class="news-chip" data-headline="Altruist launches corporate RIA to ease breakaway advisors' path to independence">Altruist's corporate RIA play</button>
+        <button class="news-chip" data-headline="Schwab's new $5 block-trading fee for RIA clients — what it really means">Schwab's $5 trading fee</button>
+        <button class="news-chip" data-headline="Survey: clients don't mind disclosed advisor AI use, as long as they can still talk to a human">AI transparency in advisory</button>
+        <button class="news-chip" data-headline="Could AI create a sea of sameness in the financial advisory industry?">AI &amp; advisory sameness</button>
+        <button class="news-chip" data-headline="Jump and Zocks raise dueling Series B rounds as AI meeting notes race toward 'advisor operating system'">AI notetaker arms race</button>
+        <button class="news-chip" data-headline="Craft on Tap named to Kitces Top 23 Podcasts for 2026">Kitces Top 23 recognition</button>
+      </div>
+    </div>
+
+    <label class="rag-toggle" id="rag-toggle-wrap" style="display:none">
+      <input type="checkbox" id="rag-toggle" />
+      <span class="rag-toggle-text">
+        <span class="rag-toggle-title">🎙️ Ground in Stephen's real podcast voice</span>
+        <span class="rag-toggle-sub" id="rag-toggle-sub">Pulls relevant moments from his podcast and writes from his actual words</span>
+      </span>
+    </label>
+
+    <button class="generate-btn" id="generate-btn">Generate draft →</button>
+
+    <div class="output-area" id="output-area">
+      <hr />
+      <div class="output-header">
+        <span class="output-label">Draft</span>
+        <div class="output-actions">
+          <button class="action-btn" id="copy-btn">Copy</button>
+          <button class="action-btn" id="regen-btn">Regenerate</button>
+          <button class="action-btn" id="compliance-btn">⚖ Compliance check</button>
+        </div>
+      </div>
+      <div class="draft-box" id="draft-output" aria-live="polite"></div>
+      <div id="char-count" class="char-count"></div>
+      <div class="regen-steer" id="regen-steer" style="display:none">
+        <label class="field-label" for="regen-input">How should this revision change? (optional — leave blank to just regenerate)</label>
+        <textarea id="regen-input" class="regen-textarea" placeholder="e.g. Make it punchier · lead with the client story · cut the stats · more contrarian · shorten to 3 lines · warmer tone…"></textarea>
+        <div class="regen-steer-actions">
+          <button class="action-btn" id="regen-submit">Regenerate →</button>
+          <button class="action-btn" id="regen-cancel">Cancel</button>
+        </div>
+      </div>
+      <div class="rationale-box" id="rationale-box" style="display:none">
+        <div class="rationale-label">Angle taken</div>
+        <div class="rationale-text" id="rationale-text"></div>
+      </div>
+      <div id="compliance-result" style="display:none"></div>
+      <p class="compliance-note">⚠ Human review required before publishing. All drafts are thought-leadership only — not investment advice.</p>
+    </div>
+
+  </div><!-- /content-panel -->
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SOCIAL INTELLIGENCE
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div id="intelligence-panel" style="display:none">
+
+    <div class="section">
+      <label class="field-label" for="monitor-query">Brand or keyword to monitor</label>
+      <div class="monitor-bar">
+        <input type="text" id="monitor-query" placeholder="e.g. Craft Impact, RIA marketing, financial advisor AI, Schwab block trading…" />
+        <button class="monitor-btn" id="monitor-btn">Monitor →</button>
+      </div>
+      <div class="niche-chips" id="monitor-keyword-chips"></div>
+    </div>
+
+    <div class="section">
+      <label class="field-label">Sources</label>
+      <div class="platform-toggles" id="platform-toggles"></div>
+    </div>
+
+    <div id="monitor-results" style="display:none">
+      <div class="output-header">
+        <span class="output-label">Mentions</span>
+        <div class="output-actions">
+          <span id="mention-count" style="font-size:11px;color:var(--text-muted)"></span>
+          <button class="action-btn" id="audience-btn" style="display:none">Audience analysis →</button>
+        </div>
+      </div>
+      <div id="results-feed"></div>
+    </div>
+
+    <div id="audience-section" style="display:none">
+      <div class="section-divider">
+        <div class="section-divider-line"></div>
+        <span class="section-divider-label">Audience Intelligence</span>
+        <div class="section-divider-line"></div>
+      </div>
+      <div class="analysis-box" id="audience-output"></div>
+    </div>
+
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <span class="section-divider-label">Image Brand Recognition</span>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <div class="section">
+      <p class="help-text">Paste a public image URL to scan for brand logos, text, or visual references. Works best with direct image URLs (.jpg, .png). Some platforms block external access.</p>
+      <div class="monitor-bar" style="margin-bottom:8px">
+        <input type="text" id="image-url-input" placeholder="https://example.com/screenshot.jpg" />
+        <button class="monitor-btn" id="analyze-image-btn">Analyze →</button>
+      </div>
+      <input type="text" id="brand-input" placeholder='Brand to look for — default: "Craft Impact or Stephen Beach"' />
+    </div>
+
+    <div id="image-result" style="display:none">
+      <div class="rationale-box" style="margin-top:0">
+        <div class="rationale-label">Image analysis</div>
+        <div class="rationale-text" id="image-analysis-output" style="white-space:pre-wrap;line-height:1.6"></div>
+      </div>
+    </div>
+
+  </div><!-- /intelligence-panel -->
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       TRENDING TOPICS
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div id="trending-panel" style="display:none">
+    <div class="trending-header">
+      <div>
+        <div class="trending-title">Trending in RIA &amp; Advisor Marketing</div>
+        <div class="trending-subtitle">Latest from Google News · Reddit · Hacker News across Craft Impact's key topics</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="trending-view-toggle">
+          <button class="tview-btn active" data-view="grid">Grid</button>
+          <button class="tview-btn" data-view="digest">✦ Digest</button>
+        </div>
+        <button class="monitor-btn" id="trending-refresh-btn">Refresh ↺</button>
+      </div>
+    </div>
+    <div id="trending-grid"></div>
+    <div id="trending-digest-panel" style="display:none">
+      <div id="trending-digest-output"></div>
+    </div>
+
+    <div class="whats-working-section">
+      <div class="whats-working-header">
+        <div>
+          <div class="whats-working-title">What's Working in Financial Marketing</div>
+          <div class="trending-subtitle">Lead gen · Sales conversion · Content that clicks — summarized by AI</div>
+        </div>
+        <button class="monitor-btn" id="whats-working-btn">Load ✦</button>
+      </div>
+      <div id="whats-working-output"></div>
+    </div>
+  </div><!-- /trending-panel -->
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       CAMPAIGNS
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div id="campaigns-panel" style="display:none">
+
+    <div class="section">
+      <label class="field-label">Campaign topic</label>
+      <textarea id="campaign-topic" placeholder="e.g. Financial advisor thinking about going independent and leaving their broker-dealer…"></textarea>
+    </div>
+
+    <div class="campaign-fields">
+      <div>
+        <label class="field-label">Target audience</label>
+        <select id="campaign-audience" class="campaign-select">
+          <option value="advisors considering independence">Advisors considering independence</option>
+          <option value="RIA owners looking to grow AUM">RIA owners looking to grow AUM</option>
+          <option value="retirees and pre-retirees">Retirees and pre-retirees</option>
+          <option value="business owners and entrepreneurs">Business owners and entrepreneurs</option>
+          <option value="young professionals building wealth">Young professionals building wealth</option>
+          <option value="DIY investors considering an advisor">DIY investors considering an advisor</option>
+          <option value="referral partners (CPAs, attorneys)">Referral partners (CPAs, attorneys)</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Campaign goal</label>
+        <select id="campaign-goal" class="campaign-select">
+          <option value="book a discovery call">Book a discovery call</option>
+          <option value="download a free resource or guide">Download a free resource or guide</option>
+          <option value="attend a webinar or event">Attend a webinar or event</option>
+          <option value="start a relationship and build trust">Start a relationship — no hard ask</option>
+          <option value="request a portfolio review">Request a portfolio review</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Sequence length</label>
+        <select id="campaign-length" class="campaign-select">
+          <option value="3">3 emails</option>
+          <option value="5" selected>5 emails</option>
+          <option value="7">7 emails</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="generate-btn" id="campaign-generate-btn">Build sequence →</button>
+
+    <div id="campaign-output-area" style="display:none">
+      <hr style="margin:1.5rem 0;border:none;border-top:0.5px solid var(--border)" />
+      <div class="output-header">
+        <span class="output-label" id="campaign-output-label">Email Sequence</span>
+        <div class="output-actions">
+          <button class="action-btn" id="campaign-copy-all-btn">Copy all</button>
+          <button class="action-btn" id="campaign-regen-btn">Regenerate</button>
+        </div>
+      </div>
+      <div class="regen-steer" id="campaign-regen-steer" style="display:none">
+        <label class="field-label" for="campaign-regen-input">How should this revision change? (optional — leave blank to just rebuild)</label>
+        <textarea id="campaign-regen-input" class="regen-textarea" placeholder="e.g. Make email 3 shorter · warmer opener · stronger CTA in the last email · add urgency · less salesy…"></textarea>
+        <div class="regen-steer-actions">
+          <button class="action-btn" id="campaign-regen-submit">Regenerate →</button>
+          <button class="action-btn" id="campaign-regen-cancel">Cancel</button>
+        </div>
+      </div>
+      <div id="campaign-cards"></div>
+    </div>
+
+  </div><!-- /campaigns-panel -->
+
+</div>
+
+<script>
+// ─── Brand profile ────────────────────────────────────────────────────────────
+var BRAND_PROFILE = 'STEPHEN BEACH — BRAND PROFILE\n\nWHO HE IS: Co-Founder & CEO of Craft Impact, an outsourced CMO + digital marketing team for independent RIAs. Also Co-Founder & CMO of Vantage Impact. Based in Tampa, FL. Notre Dame grad. Co-hosts "Craft on Tap: Growth Marketing for RIAs" podcast with Faustin Weber.\n\nONE-LINE POSITIONING: The practitioner who helps RIAs stop doing "random acts of marketing" and start growing with a real, ROI-driven system.\n\nAUDIENCE: Independent RIA owners and advisory-firm principals. Skeptical of hype, wear too many hats, care about AUM growth above all, want practical do-this-next advice — not theory.\n\nVOICE & TONE: Conversational, practitioner-first, warm, lightly self-deprecating, framework-oriented. Short sentences, plain words, generous white space. Direct and decisive.\n\nSIGNATURE PHRASES: "random acts of marketing," "shiny objects," "start with your clients," "north star / AUM," "untapped potential," "operational vs. lead gen," "90-day," "AI as an accelerator not an author."\n\nCORE BELIEFS:\n1. Start with existing clients — most efficient growth lever\n2. You need a target audience, not necessarily a strict niche\n3. Avoid random acts of marketing — tactics without strategy waste money\n4. AI is an accelerator, not an author\n5. Distribution is ~50% of the game\n6. AUM growth is the north-star metric\n\nHARD RULES:\n- NEVER: generic agency-speak, buzzword soup, investment advice, performance claims\n- ALWAYS: lead with the practical takeaway, tie back to revenue/AUM/referrals\n- Human review required before any content publishes';
+
+// Craft Impact's anti-AI writing framework — applied globally to all generation.
+var HUMAN_VOICE_RULES = [
+  'ANTI-AI WRITING RULES (Craft Impact framework — follow strictly):',
+  '',
+  'These rules override everything else about style. Content that breaks them reads as AI-written and must be avoided.',
+  '',
+  'PUNCTUATION & FORMATTING:',
+  '- NEVER use em dashes (— or --). Rewrite with commas, periods, or split the sentence.',
+  '- No colons in running prose (only okay in timestamps or resource lists).',
+  '- No "worth noting / worth knowing / worth understanding" constructions.',
+  '- Emojis only if genuinely on-brand, and sparingly.',
+  '',
+  'BANNED OPENERS & SCAFFOLDING (do not use any of these):',
+  '"Here\'s the thing", "Here\'s why that matters", "Here\'s what that means", "The takeaway here is", "The bottom line is", "At the end of the day", "What most people miss", "What nobody talks about", "The truth is", "The reality is", "That\'s where X comes in", "Sound familiar?", "Think about it", "Let that sink in", "Spoiler:", "Hot take:", "Unpopular opinion:", "Real talk:", "It is important to note", "This underscores the importance of", "In today\'s fast-paced world", "In the digital age", "In conclusion", "To summarize", "delve" / "delve into", "At its core", "Moreover", "Furthermore", "Additionally" (as transitions), "Nobody tells you", "Most advisors won\'t tell you", "Reality check".',
+  '',
+  'BANNED BUZZWORDS: game-changer, transformative, revolutionary, groundbreaking, cutting-edge, next-gen, state-of-the-art, paradigm, disruptive, reimagine, seamless, frictionless, unlock, unleash, harness, tapestry, realm, landscape (metaphorical), leverage, optimize, enhance, utilize, synergy, holistic, pivotal, crucial, foster, robust, streamlined, scalable, empower, elevate, showcase, underscore, meticulous, unparalleled, testament, navigate (for abstract things).',
+  '',
+  'BANNED SENTENCE STRUCTURES:',
+  '- "It\'s not just X, it\'s Y" and all variants ("X isn\'t just about Y", "goes beyond Y", "They don\'t just X, they Y", "X aren\'t X. They\'re Y").',
+  '- Negation flips: "X isn\'t the problem. Y is."',
+  '- Rhetorical questions ("Have you ever…?", "What if I told you…?").',
+  '- Rule of three used for rhetorical effect ("more features, more ads, more discounts").',
+  '- Dramatic one-liners as their own paragraph ("That\'s a problem.", "Full stop.", "Period.").',
+  '- Preview-then-restate: say each point ONCE, do not announce it then summarize it.',
+  '- Do not make all bullets start with the same grammatical form — vary them.',
+  '- Do not stack uniform short punchy sentences. Vary sentence length naturally (short, medium, long).',
+  '- Generic CTAs banned: no "Drop a comment below", no "What do you think?". Make asks specific and genuine.',
+  '',
+  'WHAT TO DO INSTEAD:',
+  '- Use contractions naturally (it\'s, you\'ve, that\'s, isn\'t). Their absence signals AI.',
+  '- Write like you\'re talking to a client on a call. If you\'d feel awkward saying it aloud, rewrite it.',
+  '- Make the point by stating it, not by announcing you\'re about to make it. Cut the signal, keep the substance.',
+  '- Sentence fragments are fine where they\'d occur in real speech.',
+  '- Sound like someone who has actually done the work, not read about it.',
+  '- Skip hedging and qualification. Just make the claim.'
+].join('\n');
+
+var FORMAT_INSTRUCTIONS = {
+  linkedin: 'Write a LinkedIn post in Stephen\'s voice. Hook line that earns the scroll-stop → short punchy lines or a tight numbered list → one clear takeaway → light genuine CTA or closing question. First person, casual, opinionated. 100–250 words. Emoji sparingly (1–3 max).',
+  podcast: 'Write podcast talking points for Stephen and Faustin to riff on in Craft on Tap. A framing question, then 4–6 bullet talking points with enough meat to riff on, then one spicy/contrarian take, then a real client example. Conversational bullets, not essay sentences.',
+  newsletter: 'Write a newsletter blurb in Stephen\'s voice. One idea, one story or example, one action to take. 150–250 words. First person. Should feel like a note from a knowledgeable friend.',
+  news_reaction: 'Write a news-reaction post in Stephen\'s voice. Lead with HIS angle — not a summary. Connect it to a decision an RIA needs to make. End with a practical next step. ~150–200 words. Take a clear stance.',
+  instagram: 'Write an Instagram post in Stephen\'s voice. Start with a strong first line that works as the hook before the "...more" cutoff. Then 3–6 short, scannable lines or micro-tips with line breaks between them. Keep it visual and punchy — this pairs with an image or reel. End with a genuine, specific engagement line (never "double tap" or "comment below"). Finish with 3–5 relevant hashtags on their own line (e.g. #RIA #FinancialAdvisors #Marketing). 80–150 words in the caption body.',
+  youtube: 'Write a YouTube video post for Stephen. Output THREE labeled parts: (1) TITLE — a specific, curiosity-driven title under 60 characters, no clickbait. (2) DESCRIPTION — 100–200 words in first person that explains what the video covers and why an RIA should watch, with the key takeaway up front. (3) HOOK SCRIPT — the first 15–20 seconds of spoken script to open the video, in Stephen\'s natural talking voice, that earns the viewer staying past the intro. Label each part clearly.'
+};
+
+var ANGLE_INSTRUCTIONS = {
+  contrarian: 'Take a clear contrarian angle — challenge the conventional wisdom or the obvious take.',
+  framework: 'Build this around a framework or step-by-step mental model Stephen would use.',
+  story: 'Open with a personal story, client moment, or specific anecdote before getting to the insight.',
+  practical: 'Lead with the most practical, actionable next step — make it immediately useful.',
+  industry: "Frame this as a signal about where the industry is heading and what it means for the RIA's actual business.",
+  myth: 'Identify and bust a common misconception or piece of conventional wisdom.'
+};
+
+var PLATFORMS = [
+  { id: 'reddit',        label: 'Reddit',         color: '#ff4500' },
+  { id: 'hn',            label: 'Hacker News',    color: '#ff6600' },
+  { id: 'devto',         label: 'DEV.to',         color: '#3b49df' },
+  { id: 'bluesky',       label: 'Bluesky',        color: '#0085ff' },
+  { id: 'github',        label: 'GitHub',         color: '#24292e' },
+  { id: 'stackoverflow', label: 'Stack Overflow', color: '#f48024' },
+  { id: 'news',          label: 'Financial News', color: '#1a56db' },
+  { id: 'duckduckgo',    label: 'DuckDuckGo',     color: '#de5833' },
+  { id: 'aivisibility',  label: 'AI Visibility',  color: '#7c3aed' },
+  { id: 'perplexity',    label: 'Perplexity',     color: '#20b8cd' },
+  { id: 'gemini',        label: 'Gemini',         color: '#4285f4' }
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+var selectedFormat = 'linkedin';
+var selectedAngle  = '';
+var isGenerating   = false;
+var isMonitoring   = false;
+var lastMentions   = [];
+var lastMonitorQ   = '';
+var CLIENTS        = [];    // full client records from /api/clients
+var activeClient   = null;  // the currently selected client record
+
+// Brand profile actually used for generation: active client's, else the hardcoded fallback
+function currentBrandProfile() {
+  return (activeClient && activeClient.brandProfile) ? activeClient.brandProfile : BRAND_PROFILE;
+}
+
+// Per-client prompt directives (tone + notes + values) appended to the system prompt at generation time
+function clientDirectives() {
+  if (!activeClient) return '';
+  var p = activeClient.preferences || {}, lines = [];
+  if (p.tone)  lines.push('Preferred tone: ' + p.tone + '.');
+  if (p.notes) lines.push('Client-specific direction: ' + p.notes);
+  var dir = lines.length ? '\n\nCLIENT DIRECTIVES:\n' + lines.join('\n') : '';
+
+  var vals = activeClient.values || [];
+  var valBlock = vals.length
+    ? '\n\nCORE VALUES (let these shape what the content stands for — express them implicitly through substance and tone; never list, name, or preach them):\n' +
+      vals.map(function(v) { return '- ' + v.name + (v.note ? ': ' + v.note : ''); }).join('\n')
+    : '';
+
+  return dir + valBlock;
+}
+
+// Apply a client's UI-default preferences (format tab + angle button) on load/switch
+function applyClientPrefs() {
+  if (!activeClient) return;
+  var p = activeClient.preferences || {};
+
+  // default output format → activate that format tab
+  var fmt = (p.favoriteFormats && p.favoriteFormats[0]) || null;
+  var fmtTab = fmt && document.querySelector('.fmt-tab[data-fmt="' + fmt + '"]');
+  if (fmtTab) {
+    document.querySelectorAll('.fmt-tab').forEach(function(t) { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+    fmtTab.classList.add('active'); fmtTab.setAttribute('aria-selected', 'true');
+    selectedFormat = fmt;
+    if (typeof updateFmtFades === 'function') updateFmtFades();
+  }
+
+  // default angle → select that angle button (or clear if none)
+  document.querySelectorAll('.angle-btn').forEach(function(b) { b.classList.remove('selected'); });
+  selectedAngle = '';
+  if (p.defaultAngle) {
+    var angleBtn = document.querySelector('.angle-btn[data-angle="' + p.defaultAngle + '"]');
+    if (angleBtn) { angleBtn.classList.add('selected'); selectedAngle = p.defaultAngle; }
+  }
+}
+
+// Render the active client's monitor keywords as quick-pick chips in Social Intelligence
+function applyMonitorKeywords() {
+  var wrap = document.getElementById('monitor-keyword-chips');
+  if (!wrap) return;
+  var kws = (activeClient && activeClient.monitorKeywords) || [];
+  wrap.innerHTML = kws.map(function(k) { return '<button class="niche-chip" data-kw="' + esc(k) + '">' + esc(k) + '</button>'; }).join('');
+  wrap.querySelectorAll('.niche-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      document.getElementById('monitor-query').value = chip.dataset.kw;
+      document.getElementById('monitor-query').focus();
+    });
+  });
+}
+
+// ─── Client switcher ──────────────────────────────────────────────────────────
+(function initClients() {
+  var select = document.getElementById('client-select');
+  fetch('/api/clients').then(function(r) { return r.json(); }).then(function(data) {
+    CLIENTS = data.clients || [];
+    if (!CLIENTS.length) { select.innerHTML = '<option>No clients</option>'; return; }
+
+    select.innerHTML = CLIENTS.map(function(c) {
+      return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>';
+    }).join('');
+
+    // restore last selection from localStorage, else first client
+    var savedId = localStorage.getItem('activeClientId');
+    var match = CLIENTS.filter(function(c) { return c.id === savedId; })[0];
+    activeClient = match || CLIENTS[0];
+    select.value = activeClient.id;
+    applyClientPrefs();
+    applyMonitorKeywords();
+    applyNicheChips();
+
+    select.addEventListener('change', function() {
+      activeClient = CLIENTS.filter(function(c) { return c.id === select.value; })[0] || null;
+      if (activeClient) localStorage.setItem('activeClientId', activeClient.id);
+      applyClientPrefs();
+      // invalidate client-scoped caches so tabs re-fetch for the new client
+      trendingLoaded = false;
+      trendingDigestLoaded = false;
+      lastTrendingTopics = [];
+      document.getElementById('trending-grid').innerHTML = '';
+      applyMonitorKeywords();
+      applyNicheChips();
+    });
+  }).catch(function() {
+    select.innerHTML = '<option>' + esc('(clients unavailable)') + '</option>';
+  });
+})();
+
+// ─── Panel switching ──────────────────────────────────────────────────────────
+document.querySelectorAll('.panel-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.panel-tab').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    var p = tab.dataset.panel;
+    document.getElementById('content-panel').style.display     = p === 'content'      ? '' : 'none';
+    document.getElementById('intelligence-panel').style.display = p === 'intelligence' ? '' : 'none';
+    document.getElementById('trending-panel').style.display    = p === 'trending'     ? '' : 'none';
+    document.getElementById('campaigns-panel').style.display   = p === 'campaigns'    ? '' : 'none';
+    if (p === 'trending' && !trendingLoaded) loadTrending();
+    if (p === 'content' && typeof updateFmtFades === 'function') updateFmtFades();
+  });
+});
+
+// ─── Format tabs ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.fmt-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.fmt-tab').forEach(function(t) { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+    tab.classList.add('active'); tab.setAttribute('aria-selected','true');
+    selectedFormat = tab.dataset.fmt;
+  });
+});
+
+// ─── Format-tab scroll fade cues ──────────────────────────────────────────────
+function updateFmtFades() {
+  var wrap = document.getElementById('format-tabs-wrap');
+  var tabs = document.getElementById('format-tabs');
+  if (!wrap || !tabs) return;
+  var maxScroll = tabs.scrollWidth - tabs.clientWidth;
+  // more content to the LEFT → show left fade; more to the RIGHT → show right fade
+  wrap.classList.toggle('can-left',  tabs.scrollLeft > 2);
+  wrap.classList.toggle('can-right', tabs.scrollLeft < maxScroll - 2);
+}
+document.getElementById('format-tabs').addEventListener('scroll', updateFmtFades);
+window.addEventListener('resize', updateFmtFades);
+(function() {
+  var tabs = document.getElementById('format-tabs');
+  document.getElementById('fmt-arrow-left').addEventListener('click', function() {
+    tabs.scrollBy({ left: -160, behavior: 'smooth' });
+  });
+  document.getElementById('fmt-arrow-right').addEventListener('click', function() {
+    tabs.scrollBy({ left: 160, behavior: 'smooth' });
+  });
+})();
+updateFmtFades();
+
+// ─── Angle buttons ────────────────────────────────────────────────────────────
+document.querySelectorAll('.angle-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    if (btn.classList.contains('selected')) { btn.classList.remove('selected'); selectedAngle = ''; }
+    else { document.querySelectorAll('.angle-btn').forEach(function(b) { b.classList.remove('selected'); }); btn.classList.add('selected'); selectedAngle = btn.dataset.angle; }
+  });
+});
+
+// ─── News chips ───────────────────────────────────────────────────────────────
+document.querySelectorAll('.news-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.news-chip').forEach(function(c) { c.classList.remove('active'); });
+    chip.classList.add('active');
+    document.getElementById('topic-input').value = chip.dataset.headline;
+  });
+});
+
+// ─── Niche chips (rendered per-client from activeClient.nicheSegments) ─────────
+function applyNicheChips() {
+  var wrap  = document.getElementById('niche-chips');
+  var input = document.getElementById('audience-input');
+  if (!wrap) return;
+  var segments = (activeClient && activeClient.nicheSegments) || [];
+  wrap.innerHTML = segments.map(function(s) {
+    return '<button class="niche-chip" data-niche="' + esc(s.value) + '">' + esc(s.label) + '</button>';
+  }).join('');
+
+  wrap.querySelectorAll('.niche-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      if (chip.classList.contains('active')) {           // toggle off → clear
+        chip.classList.remove('active');
+        input.value = '';
+      } else {
+        wrap.querySelectorAll('.niche-chip').forEach(function(c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        input.value = chip.dataset.niche;
+      }
+    });
+  });
+}
+// manual edits deselect any active niche chip (scoped to #niche-chips)
+document.getElementById('audience-input').addEventListener('input', function() {
+  var v = this.value.trim();
+  document.querySelectorAll('#niche-chips .niche-chip').forEach(function(c) {
+    if (c.dataset.niche !== v) c.classList.remove('active');
+  });
+});
+
+// ─── Copy ─────────────────────────────────────────────────────────────────────
+document.getElementById('copy-btn').addEventListener('click', function() {
+  navigator.clipboard.writeText(document.getElementById('draft-output').innerText).then(function() {
+    var btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied ✓';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+  });
+});
+
+// ─── Generate ─────────────────────────────────────────────────────────────────
+document.getElementById('generate-btn').addEventListener('click', function() { generateContent(); });
+
+// Regenerate now opens a guidance box instead of regenerating blindly
+document.getElementById('regen-btn').addEventListener('click', function() {
+  var steer = document.getElementById('regen-steer');
+  var open  = steer.style.display !== 'none';
+  steer.style.display = open ? 'none' : 'block';
+  if (!open) document.getElementById('regen-input').focus();
+});
+document.getElementById('regen-cancel').addEventListener('click', function() {
+  document.getElementById('regen-steer').style.display = 'none';
+});
+document.getElementById('regen-submit').addEventListener('click', function() {
+  var guidance = document.getElementById('regen-input').value.trim();
+  document.getElementById('regen-steer').style.display = 'none';
+  generateContent(guidance);
+});
+
+function generateContent(steer) {
+  if (isGenerating) return;
+  var steerText = (typeof steer === 'string') ? steer.trim() : '';
+  var topic = document.getElementById('topic-input').value.trim();
+  var goal  = document.getElementById('goal-input').value.trim();
+  if (!topic) { document.getElementById('topic-input').focus(); return; }
+
+  var draftBox = document.getElementById('draft-output');
+  // Capture the current draft BEFORE we overwrite it — needed to steer a revision
+  var prevDraft = steerText ? draftBox.textContent.trim() : '';
+
+  isGenerating = true;
+  var btn = document.getElementById('generate-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> ' + (steerText ? 'Revising...' : 'Generating...');
+
+  var outputArea = document.getElementById('output-area');
+  var ratBox     = document.getElementById('rationale-box');
+  outputArea.classList.add('visible');
+  draftBox.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
+  ratBox.style.display = 'none';
+  document.getElementById('char-count').textContent = '';
+
+  var angleNote = selectedAngle ? '\n\nANGLE TO USE: ' + ANGLE_INSTRUCTIONS[selectedAngle] : '';
+  var goalNote  = goal ? '\n\nGOAL FOR THIS PIECE: ' + goal : '';
+  var audience  = document.getElementById('audience-input').value.trim();
+  var audNote   = audience ? '\n\nTARGET AUDIENCE / NICHE: Write this specifically for ' + audience + '. Tailor the angle, pain points, examples, and vocabulary to their world — reference their specific situation, not generic advice. It should feel written FOR this niche.' : '';
+
+  var clientName = (activeClient && activeClient.name) ? activeClient.name : 'Stephen Beach';
+  var sys = 'You are a content writer who has deeply studied ' + clientName + '\'s voice, frameworks, and beliefs. Write content that sounds authentically like them — not generic AI copy.\n\n' + currentBrandProfile() + clientDirectives() + '\n\n' + HUMAN_VOICE_RULES + '\n\nAfter the draft, write "---ANGLE---" then one sentence (under 30 words) explaining the angle you took.\n\nNever write investment advice or SEC-regulated content.';
+  var usr = 'FORMAT: ' + selectedFormat.replace('_',' ') + '\nINSTRUCTIONS: ' + FORMAT_INSTRUCTIONS[selectedFormat] + '\n\nTOPIC: ' + topic + goalNote + angleNote + audNote + '\n\nMatch their voice exactly. The first line must earn attention.';
+
+  // If the user gave revision guidance, hand back the previous draft + their steer
+  if (steerText && prevDraft) {
+    usr += '\n\nThis is a REVISION. Here is the previous draft:\n"""\n' + prevDraft + '\n"""\n\nRevise it according to this specific guidance from the user:\n' + steerText + '\n\nKeep what already works; change what the guidance asks for. Return the full revised piece, not a diff or commentary.';
+  }
+
+  // RAG step: if the toggle is on, retrieve real podcast excerpts and inject them
+  var useRag = document.getElementById('rag-toggle').checked;
+  var ragSources = '';
+  var ragStep = useRag
+    ? fetch('/api/retrieve', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: topic, k: 5 })
+      }).then(function(r) { return r.json(); }).then(function(d) { return d.chunks || []; }).catch(function() { return []; })
+    : Promise.resolve([]);
+
+  ragStep.then(function(chunks) {
+    if (chunks.length) {
+      usr += '\n\nHere are real excerpts from Stephen\'s podcast on related topics. Study his actual phrasing, rhythm, and how he makes points — then write something NEW in that same voice. Do not quote these verbatim:\n\n' +
+        chunks.map(function(c, i) { return '--- Excerpt ' + (i + 1) + ' (' + c.source + ') ---\n' + c.text; }).join('\n\n');
+      // de-dupe the episode labels for a "grounded in" note
+      var seen = {}, labels = [];
+      chunks.forEach(function(c) { var ep = c.source.split(' — ')[0]; if (!seen[ep]) { seen[ep] = true; labels.push(ep); } });
+      ragSources = labels.join(', ');
+    }
+    return fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, system: sys, messages: [{ role: 'user', content: usr }] })
+    });
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var full  = (data.content || []).map(function(i) { return i.text || ''; }).join('');
+    var parts = full.split('---ANGLE---');
+    var draft = parts[0].trim();
+    draftBox.textContent = draft;
+    document.getElementById('char-count').textContent = draft.length + ' characters' + (ragSources ? ' · 🎙️ grounded in ' + ragSources : '');
+    if (parts[1]) { document.getElementById('rationale-text').textContent = parts[1].trim(); ratBox.style.display = 'block'; }
+  })
+  .catch(function(err) { draftBox.textContent = 'Error: ' + err.message; })
+  .then(function() { isGenerating = false; btn.disabled = false; btn.textContent = 'Generate draft →'; document.getElementById('regen-input').value = ''; });
+}
+
+// Reveal the RAG toggle only if the server actually has an embeddings store + Voyage key
+fetch('/api/rag-status').then(function(r) { return r.json(); }).then(function(s) {
+  if (s.available) {
+    document.getElementById('rag-toggle-wrap').style.display = 'flex';
+    document.getElementById('rag-toggle-sub').textContent =
+      'Pulls from ' + s.chunks + ' real moments across his podcast and writes from his actual words';
+  }
+}).catch(function() {});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SOCIAL INTELLIGENCE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Build platform toggles
+(function() {
+  var container = document.getElementById('platform-toggles');
+  PLATFORMS.forEach(function(p) {
+    var label = document.createElement('label');
+    label.className = 'ptoggle on';
+    label.innerHTML = '<input type="checkbox" value="' + p.id + '" checked /><span class="pdot"></span>' + p.label;
+    label.querySelector('input').addEventListener('change', function() {
+      label.classList.toggle('on', this.checked);
+    });
+    container.appendChild(label);
+  });
+})();
+
+function getSelectedPlatforms() {
+  return Array.from(document.querySelectorAll('#platform-toggles input:checked')).map(function(i) { return i.value; });
+}
+
+function timeAgo(dateStr) {
+  try {
+    var ms    = Date.now() - new Date(dateStr).getTime();
+    var mins  = Math.floor(ms / 60000);
+    var hours = Math.floor(ms / 3600000);
+    var days  = Math.floor(ms / 86400000);
+    if (mins  < 2)  return 'just now';
+    if (mins  < 60) return mins + 'm ago';
+    if (hours < 24) return hours + 'h ago';
+    if (days  < 30) return days + 'd ago';
+    return Math.floor(days / 30) + 'mo ago';
+  } catch(e) { return ''; }
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+var resultItems = [];
+
+function renderResults(results) {
+  var feed = document.getElementById('results-feed');
+  resultItems = results;
+  if (!results.length) {
+    feed.innerHTML = '<div class="empty-state">No mentions found. Try a broader or different search term.</div>';
+    return;
+  }
+  var groups = {};
+  results.forEach(function(r, i) { r._idx = i; if (!groups[r.platform]) groups[r.platform] = []; groups[r.platform].push(r); });
+  var html = '';
+  Object.keys(groups).forEach(function(platform) {
+    var items = groups[platform];
+    var color = items[0].color || '#888';
+    html += '<div class="platform-group"><div class="platform-group-header"><span class="platform-badge" style="background:' + color + '">' + platform + '</span><span class="platform-group-count">' + items.length + ' result' + (items.length !== 1 ? 's' : '') + '</span></div>';
+    items.forEach(function(item) {
+      html += '<div class="result-card" data-idx="' + item._idx + '">';
+      html += '<div class="result-card-header">';
+      html += '<div class="result-card-header-text">';
+      html += '<span class="result-title-text">' + esc(item.title) + '</span>';
+      if (item.snippet) html += '<p class="result-snippet-preview">' + esc(item.snippet) + '</p>';
+      html += '</div>';
+      html += '<span class="result-expand-icon">▸</span>';
+      html += '</div>';
+      html += '<div class="result-card-body">';
+      html += '<div class="result-meta">';
+      if (item.author) html += '<span>' + esc(item.author) + '</span>';
+      if (item.score)  html += '<span>↑ ' + item.score + '</span>';
+      if (item.meta)   html += '<span>' + esc(item.meta) + '</span>';
+      if (item.date)   html += '<span>' + timeAgo(item.date) + '</span>';
+      html += '</div>';
+      html += '<div class="result-ai-summary" id="ai-summary-' + item._idx + '"></div>';
+      html += '<div class="result-card-actions">';
+      html += '<button class="summarize-btn" data-idx="' + item._idx + '">✦ Summarize</button>';
+      html += '<button class="use-in-generator-btn" data-idx="' + item._idx + '">Generate content →</button>';
+      if (item.url) html += '<a class="visit-source-btn" href="' + esc(item.url) + '" target="_blank" rel="noopener">Visit source →</a>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  feed.innerHTML = html;
+
+  // Card expand/collapse
+  document.querySelectorAll('.result-card').forEach(function(card) {
+    card.querySelector('.result-card-header').addEventListener('click', function() {
+      var isOpen = card.classList.contains('open');
+      card.classList.toggle('open', !isOpen);
+      card.querySelector('.result-expand-icon').textContent = isOpen ? '▸' : '▾';
+    });
+  });
+
+  // Use in generator buttons
+  document.querySelectorAll('.use-in-generator-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var idx  = parseInt(btn.dataset.idx, 10);
+      var item = resultItems[idx];
+      if (!item) return;
+
+      // Build topic string from title + snippet context
+      var topic = item.title;
+      if (item.snippet) topic += '\n\nContext: ' + item.snippet.slice(0, 300);
+
+      // Switch to content panel
+      document.querySelectorAll('.panel-tab').forEach(function(t) { t.classList.remove('active'); });
+      var contentTab = document.querySelector('.panel-tab[data-panel="content"]');
+      if (contentTab) contentTab.classList.add('active');
+      document.getElementById('content-panel').style.display     = '';
+      document.getElementById('intelligence-panel').style.display = 'none';
+
+      // Pre-fill topic and scroll to it
+      var topicInput = document.getElementById('topic-input');
+      topicInput.value = topic;
+      topicInput.focus();
+      topicInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Flash the field so the user notices it was populated
+      topicInput.style.transition = 'background 0.3s';
+      topicInput.style.background = 'var(--accent-bg)';
+      setTimeout(function() { topicInput.style.background = ''; }, 1000);
+    });
+  });
+
+  // Summarize buttons
+  document.querySelectorAll('.summarize-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var idx  = parseInt(btn.dataset.idx, 10);
+      var item = resultItems[idx];
+      var box  = document.getElementById('ai-summary-' + idx);
+      if (!item) return;
+      btn.disabled = true;
+      btn.textContent = 'Summarizing…';
+      box.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
+      box.style.display = 'block';
+
+      fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: item.title, snippet: item.snippet, url: item.url, platform: item.platform })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) throw new Error(data.error);
+        box.textContent = data.summary || 'No summary returned.';
+        btn.textContent = '✦ Re-summarize';
+        btn.disabled = false;
+      })
+      .catch(function(err) {
+        box.textContent = 'Error: ' + err.message;
+        btn.textContent = '✦ Summarize for Stephen';
+        btn.disabled = false;
+      });
+    });
+  });
+}
+
+// ─── Monitor ──────────────────────────────────────────────────────────────────
+document.getElementById('monitor-btn').addEventListener('click', function() {
+  if (isMonitoring) return;
+  var q = document.getElementById('monitor-query').value.trim();
+  if (!q) { document.getElementById('monitor-query').focus(); return; }
+
+  isMonitoring = true;
+  var btn = document.getElementById('monitor-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
+
+  var platforms = getSelectedPlatforms();
+  document.getElementById('monitor-results').style.display  = 'none';
+  document.getElementById('audience-section').style.display = 'none';
+
+  fetch('/api/monitor?q=' + encodeURIComponent(q) + '&platforms=' + platforms.join(','))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      lastMentions = data.results || [];
+      lastMonitorQ = q;
+      document.getElementById('monitor-results').style.display = 'block';
+      document.getElementById('mention-count').textContent = lastMentions.length + ' mentions across ' + platforms.length + ' source' + (platforms.length !== 1 ? 's' : '');
+      document.getElementById('audience-btn').style.display = lastMentions.length ? '' : 'none';
+      renderResults(lastMentions);
+    })
+    .catch(function(err) {
+      document.getElementById('monitor-results').style.display = 'block';
+      document.getElementById('results-feed').innerHTML = '<div class="empty-state">Error: ' + esc(err.message) + '</div>';
+    })
+    .then(function() { isMonitoring = false; btn.disabled = false; btn.textContent = 'Monitor →'; });
+});
+
+// ─── Audience analysis ────────────────────────────────────────────────────────
+document.getElementById('audience-btn').addEventListener('click', function() {
+  if (!lastMentions.length) return;
+  var btn    = document.getElementById('audience-btn');
+  var sec    = document.getElementById('audience-section');
+  var output = document.getElementById('audience-output');
+  btn.disabled = true; btn.textContent = 'Analyzing…';
+  sec.style.display = 'block';
+  output.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> Analyzing ' + lastMentions.length + ' mentions…';
+
+  fetch('/api/audience', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mentions: lastMentions, query: lastMonitorQ })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) { output.textContent = data.analysis || 'No analysis returned.'; })
+  .catch(function(err) { output.textContent = 'Error: ' + err.message; })
+  .then(function() { btn.disabled = false; btn.textContent = 'Audience analysis →'; });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TRENDING TOPICS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+var trendingLoaded = false;
+
+function loadTrending(andDigest) {
+  var grid = document.getElementById('trending-grid');
+  var btn  = document.getElementById('trending-refresh-btn');
+  trendingLoaded = true;
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+
+  // frontend-push: send the active client's trending topics, if any
+  var clientTopics = (activeClient && activeClient.trendingTopics) || [];
+  var url = '/api/trending' + (clientTopics.length ? '?topics=' + encodeURIComponent(clientTopics.join('|')) : '');
+  var count = clientTopics.length || 8;
+  grid.innerHTML = '<div class="trending-loading"><span class="loading-dots"><span></span><span></span><span></span></span> Fetching latest across ' + count + ' topics…</div>';
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var topics = data.topics || [];
+      if (!topics.length) { grid.innerHTML = '<div class="trending-empty">No results returned.</div>'; return; }
+
+      lastTrendingTopics = topics;
+      var html = '<div class="trending-grid">';
+      topics.forEach(function(t) {
+        html += '<div class="trending-topic-card">';
+        html += '<div class="trending-topic-label">' + esc(t.topic) + '</div>';
+        if (!t.items.length) {
+          html += '<div class="trending-empty">No recent results found.</div>';
+        } else {
+          t.items.forEach(function(item, i) {
+            html += '<div class="trending-item" data-title="' + esc(item.title) + '" data-snippet="' + esc(item.snippet || '') + '" data-topic="' + esc(t.topic) + '">';
+            html += '<div class="trending-item-title">' + esc(item.title) + '</div>';
+            html += '<div class="trending-item-meta">';
+            html += '<span class="trending-item-source">';
+            html += '<span class="platform-badge" style="background:' + (item.color || '#888') + ';font-size:9px;padding:1px 6px">' + esc(item.platform) + '</span>';
+            html += ' &nbsp;' + timeAgo(item.date);
+            html += '</span>';
+            html += '<div class="trending-item-actions">';
+            if (item.url) html += '<a class="trending-visit-btn" href="' + esc(item.url) + '" target="_blank" rel="noopener">↗</a>';
+            html += '<button class="trending-use-btn">Use in generator</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+          });
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+      grid.innerHTML = html;
+
+      document.querySelectorAll('.trending-use-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var item  = btn.closest('.trending-item');
+          var title   = item.dataset.title;
+          var snippet = item.dataset.snippet;
+          var topic   = item.dataset.topic;
+          var text    = title;
+          if (snippet) text += '\n\nContext: ' + snippet.slice(0, 300);
+          if (topic)   text += '\n\nTopic area: ' + topic;
+
+          document.querySelectorAll('.panel-tab').forEach(function(t) { t.classList.remove('active'); });
+          document.querySelector('.panel-tab[data-panel="content"]').classList.add('active');
+          document.getElementById('content-panel').style.display    = '';
+          document.getElementById('intelligence-panel').style.display = 'none';
+          document.getElementById('trending-panel').style.display   = 'none';
+
+          var topicInput = document.getElementById('topic-input');
+          topicInput.value = text;
+          topicInput.focus();
+          topicInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          topicInput.style.transition = 'background 0.3s';
+          topicInput.style.background = 'var(--accent-bg)';
+          setTimeout(function() { topicInput.style.background = ''; }, 1000);
+        });
+      });
+    })
+    .catch(function(err) {
+      grid.innerHTML = '<div class="trending-empty">Error: ' + esc(err.message) + '</div>';
+    })
+    .then(function() {
+      btn.disabled = false;
+      btn.textContent = 'Refresh ↺';
+      if (andDigest && lastTrendingTopics.length) renderDigest(lastTrendingTopics);
+    });
+}
+
+document.getElementById('trending-refresh-btn').addEventListener('click', function() {
+  trendingLoaded = false;
+  trendingDigestLoaded = false;
+  var activeView = document.querySelector('.tview-btn.active');
+  if (activeView && activeView.dataset.view === 'digest') {
+    loadTrending(true);
+  } else {
+    loadTrending();
+  }
+});
+
+// ─── Digest view toggle ───────────────────────────────────────────────────────
+var trendingDigestLoaded = false;
+var lastTrendingTopics   = [];
+
+document.querySelectorAll('.tview-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tview-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    var view = btn.dataset.view;
+    document.getElementById('trending-grid').style.display         = view === 'grid'   ? '' : 'none';
+    document.getElementById('trending-digest-panel').style.display = view === 'digest' ? '' : 'none';
+    if (view === 'digest') {
+      if (!trendingLoaded) {
+        loadTrending(true);
+      } else if (!trendingDigestLoaded && lastTrendingTopics.length) {
+        renderDigest(lastTrendingTopics);
+      }
+    }
+  });
+});
+
+function renderDigest(topics) {
+  var out = document.getElementById('trending-digest-output');
+  trendingDigestLoaded = true;
+  out.innerHTML = '<div class="digest-loading"><span class="loading-dots"><span></span><span></span><span></span></span> Analyzing trends with AI…</div>';
+
+  fetch('/api/trending-digest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topics: topics })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error);
+    var text = data.digest || '';
+    var sections = text.split(/\n###\s+/).filter(Boolean);
+    if (text.startsWith('###')) sections[0] = sections[0];
+
+    var html = '<div class="digest-sections">';
+    sections.forEach(function(block) {
+      var lines     = block.trim().split('\n');
+      var title     = lines[0].replace(/^#+\s*/, '').trim();
+      var headlines = lines.filter(function(l) { return l.trim().startsWith('- '); });
+      var summaryLines = lines.filter(function(l) { return l.trim() && !l.trim().startsWith('- ') && !l.trim().startsWith('#'); });
+
+      html += '<div class="digest-section">';
+      html += '<div class="digest-section-title">' + esc(title) + '</div>';
+      if (summaryLines.length) html += '<p class="digest-section-summary">' + esc(summaryLines.join(' ').trim()) + '</p>';
+      headlines.forEach(function(h) {
+        html += '<div class="digest-headline">' + esc(h.replace(/^-\s*/, '').trim()) + '</div>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+    out.innerHTML = html;
+  })
+  .catch(function(err) {
+    out.innerHTML = '<div class="digest-error">Could not generate digest: ' + esc(err.message) + '. Make sure your Anthropic account has credits.</div>';
+    trendingDigestLoaded = false;
+  });
+}
+
+// ─── Compliance check ────────────────────────────────────────────────────────
+document.getElementById('compliance-btn').addEventListener('click', function() {
+  var draft = document.getElementById('draft-output').innerText.trim();
+  if (!draft) return;
+
+  var btn    = document.getElementById('compliance-btn');
+  var result = document.getElementById('compliance-result');
+  btn.disabled = true;
+  btn.textContent = '⚖ Checking…';
+  result.style.display = '';
+  result.innerHTML = '<div class="compliance-box warn"><div class="compliance-box-header">⏳ Running compliance check…</div></div>';
+
+  fetch('/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 600,
+      system:
+        'You are a compliance reviewer for a registered investment advisor (RIA) marketing firm. ' +
+        'You review content against SEC and FINRA marketing rules (SEC Marketing Rule 206(4)-1, FINRA Rule 2210). ' +
+        'Be practical and specific. Flag real risks, not hypothetical ones.',
+      messages: [{
+        role: 'user',
+        content:
+          'Review this draft for SEC/FINRA compliance issues before it is published.\n\n' +
+          'Check for:\n' +
+          '- Performance claims or implied returns (past or future)\n' +
+          '- Guarantees or promises about investment outcomes\n' +
+          '- Testimonials or endorsements without required disclosures\n' +
+          '- Misleading statements about fees, services, or credentials\n' +
+          '- Superlatives ("best", "top", "#1") without substantiation\n' +
+          '- Missing required disclosures for specific claims\n' +
+          '- Cherry-picked results or selective time periods\n\n' +
+          'Output format — start with exactly one of these verdicts on its own line:\n' +
+          'VERDICT: PASS\n' +
+          'VERDICT: CAUTION\n' +
+          'VERDICT: FLAG\n\n' +
+          'Then for CAUTION or FLAG, list each issue as:\n' +
+          'ISSUE: [quoted phrase from draft] — [what the risk is and how to fix it]\n\n' +
+          'End with one sentence of overall guidance.\n\n' +
+          'DRAFT:\n' + draft
+      }]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var text = (data.content || []).map(function(i) { return i.text || ''; }).join('').trim();
+    if (!text) throw new Error('No response from API. Check your Anthropic credits.');
+
+    var verdictMatch = text.match(/VERDICT:\s*(PASS|CAUTION|FLAG)/i);
+    var verdict      = verdictMatch ? verdictMatch[1].toUpperCase() : 'CAUTION';
+    var cls          = verdict === 'PASS' ? 'pass' : verdict === 'FLAG' ? 'fail' : 'warn';
+    var icon         = verdict === 'PASS' ? '✅' : verdict === 'FLAG' ? '🚫' : '⚠️';
+    var label        = verdict === 'PASS' ? 'Looks good — no major compliance issues found'
+                     : verdict === 'FLAG' ? 'Issues found — do not publish without revisions'
+                     : 'Caution — review before publishing';
+
+    var issues = [];
+    var issueRx = /ISSUE:\s*(.+)/g;
+    var m;
+    while ((m = issueRx.exec(text)) !== null) issues.push(m[1].trim());
+
+    var summary = text.split('\n').filter(function(l) {
+      return l.trim() && !/^VERDICT:/i.test(l) && !/^ISSUE:/i.test(l);
+    }).pop() || '';
+
+    var html = '<div class="compliance-box ' + cls + '">';
+    html += '<div class="compliance-box-header">' + icon + ' ' + label + '</div>';
+    if (issues.length) {
+      issues.forEach(function(issue) {
+        var parts = issue.split(' — ');
+        var quote = parts[0] || '';
+        var fix   = parts.slice(1).join(' — ') || '';
+        html += '<div class="compliance-flag"><span class="compliance-flag-icon">⚑</span><span><strong>' + esc(quote) + '</strong>' + (fix ? ' — ' + esc(fix) : '') + '</span></div>';
+      });
+    }
+    if (summary) html += '<div class="compliance-box-body" style="margin-top:8px;border-top:0.5px solid var(--border);padding-top:8px">' + esc(summary) + '</div>';
+    html += '</div>';
+    result.innerHTML = html;
+  })
+  .catch(function(err) {
+    result.innerHTML = '<div class="compliance-box warn"><div class="compliance-box-header">⚠️ Could not run check</div><div class="compliance-box-body">' + esc(err.message) + '</div></div>';
+  })
+  .then(function() {
+    btn.disabled = false;
+    btn.textContent = '⚖ Compliance check';
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CAMPAIGNS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+var lastCampaignText = '';
+
+document.getElementById('campaign-generate-btn').addEventListener('click', function() { buildCampaign(); });
+
+// Regenerate opens an optional guidance box; blank guidance just rebuilds fresh
+document.getElementById('campaign-regen-btn').addEventListener('click', function() {
+  var steer = document.getElementById('campaign-regen-steer');
+  var open  = steer.style.display !== 'none';
+  steer.style.display = open ? 'none' : 'block';
+  if (!open) document.getElementById('campaign-regen-input').focus();
+});
+document.getElementById('campaign-regen-cancel').addEventListener('click', function() {
+  document.getElementById('campaign-regen-steer').style.display = 'none';
+});
+document.getElementById('campaign-regen-submit').addEventListener('click', function() {
+  var guidance = document.getElementById('campaign-regen-input').value.trim();
+  document.getElementById('campaign-regen-steer').style.display = 'none';
+  buildCampaign(guidance);
+});
+
+function buildCampaign(steer) {
+  var steerText = (typeof steer === 'string') ? steer.trim() : '';
+  var topic    = document.getElementById('campaign-topic').value.trim();
+  var audience = document.getElementById('campaign-audience').value;
+  var goal     = document.getElementById('campaign-goal').value;
+  var length   = parseInt(document.getElementById('campaign-length').value, 10);
+  if (!topic) { document.getElementById('campaign-topic').focus(); return; }
+
+  var prevSequence = (steerText && lastCampaignText) ? lastCampaignText : '';
+
+  var btn     = document.getElementById('campaign-generate-btn');
+  var outArea = document.getElementById('campaign-output-area');
+  var cards   = document.getElementById('campaign-cards');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span> ' + (steerText ? 'Revising sequence…' : 'Building sequence…');
+  if (!steerText) { outArea.style.display = 'none'; cards.innerHTML = ''; }
+
+  var clientName = (activeClient && activeClient.name) ? activeClient.name : 'Stephen Beach';
+  var sys =
+    'You are an email copywriter who has deeply studied ' + clientName + '\'s voice and approach to marketing.\n\n' +
+    currentBrandProfile() + clientDirectives() + '\n\n' +
+    HUMAN_VOICE_RULES + '\n\n' +
+    'Write email sequences that feel like personal, helpful notes — not sales blasts. ' +
+    'Each email should stand alone but build on the previous one. ' +
+    'Match the voice and tone from the brand profile above: plain language, short sentences, no jargon.';
+
+  var usr =
+    'Write a ' + length + '-email nurture sequence for the following:\n\n' +
+    'TOPIC / PAIN POINT: ' + topic + '\n' +
+    'TARGET AUDIENCE: ' + audience + '\n' +
+    'CAMPAIGN GOAL: ' + goal + '\n\n' +
+    'For each email output EXACTLY this format (no deviations):\n\n' +
+    '---EMAIL {N}---\n' +
+    'SUBJECT: {subject line}\n' +
+    'PREVIEW: {preview text, under 90 chars}\n' +
+    'BODY:\n{email body}\n' +
+    'CTA: {call to action text}\n\n' +
+    'Rules:\n' +
+    '- Email 1: empathy and identification with their pain — no pitch\n' +
+    '- Email 2: reframe or insight — shift how they see the problem\n' +
+    '- Email 3: social proof or story — a client moment or result\n' +
+    '- Email 4 (if applicable): objection handler — address the #1 reason they hesitate\n' +
+    '- Email 5+ (if applicable): soft CTA leading to the campaign goal\n' +
+    '- Bodies: 100–180 words each, first person, conversational\n' +
+    '- Subject lines: specific and curiosity-driven, under 50 chars, no clickbait\n' +
+    '- Never mention investment returns, performance, or SEC-regulated claims';
+
+  // If the user gave revision guidance, hand back the previous sequence + their steer
+  if (steerText && prevSequence) {
+    usr += '\n\nThis is a REVISION. Here is the previous sequence you generated:\n"""\n' + prevSequence + '\n"""\n\nRevise it according to this specific guidance from the user:\n' + steerText + '\n\nKeep what already works; change what the guidance asks for. Return the FULL revised sequence in the exact same ---EMAIL {N}--- format.';
+  }
+
+  fetch('/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2500, system: sys, messages: [{ role: 'user', content: usr }] })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var full = (data.content || []).map(function(i) { return i.text || ''; }).join('');
+    if (!full) throw new Error('No content returned. Check your Anthropic API credits.');
+    lastCampaignText = full;
+
+    var emails = [];
+    var blocks = full.split(/---EMAIL\s*\d+---/i).filter(function(b) { return b.trim(); });
+    blocks.forEach(function(block, idx) {
+      var subject = (block.match(/^SUBJECT:\s*(.+)$/m) || [])[1] || '';
+      var preview = (block.match(/^PREVIEW:\s*(.+)$/m) || [])[1] || '';
+      var cta     = (block.match(/^CTA:\s*(.+)$/m) || [])[1] || '';
+      var bodyMatch = block.match(/BODY:\n([\s\S]*?)(?:\nCTA:|$)/);
+      var body    = bodyMatch ? bodyMatch[1].trim() : '';
+      emails.push({ num: idx + 1, subject: subject.trim(), preview: preview.trim(), body: body.trim(), cta: cta.trim() });
+    });
+
+    document.getElementById('campaign-output-label').textContent = length + '-Email Sequence — ' + audience;
+    outArea.style.display = '';
+
+    var allText = emails.map(function(e) {
+      return '── Email ' + e.num + ' ──\nSubject: ' + e.subject + '\nPreview: ' + e.preview + '\n\n' + e.body + '\n\nCTA: ' + e.cta;
+    }).join('\n\n\n');
+
+    document.getElementById('campaign-copy-all-btn').onclick = function() {
+      navigator.clipboard.writeText(allText).then(function() {
+        var b = document.getElementById('campaign-copy-all-btn');
+        b.textContent = 'Copied ✓';
+        setTimeout(function() { b.textContent = 'Copy all'; }, 2000);
+      });
+    };
+
+    cards.innerHTML = emails.map(function(e) {
+      return '<div class="email-card">' +
+        '<div class="email-card-header">' +
+          '<span class="email-card-num">Email ' + e.num + '</span>' +
+          '<span class="email-card-subject">' + esc(e.subject) + '</span>' +
+          '<button class="email-card-copy" data-idx="' + (e.num - 1) + '">Copy</button>' +
+        '</div>' +
+        '<div class="email-card-body">' +
+          '<div class="email-field-label">Preview text</div>' +
+          '<div class="email-preview-text">' + esc(e.preview) + '</div>' +
+          '<div class="email-field-label">Body</div>' +
+          '<div class="email-body-text">' + esc(e.body) + '</div>' +
+          '<div class="email-field-label">Call to action</div>' +
+          '<div class="email-cta">' + esc(e.cta) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    document.querySelectorAll('.email-card-copy').forEach(function(copyBtn) {
+      copyBtn.addEventListener('click', function() {
+        var e = emails[parseInt(copyBtn.dataset.idx, 10)];
+        var text = 'Subject: ' + e.subject + '\nPreview: ' + e.preview + '\n\n' + e.body + '\n\nCTA: ' + e.cta;
+        navigator.clipboard.writeText(text).then(function() {
+          copyBtn.textContent = 'Copied ✓';
+          setTimeout(function() { copyBtn.textContent = 'Copy'; }, 2000);
+        });
+      });
+    });
+  })
+  .catch(function(err) {
+    outArea.style.display = '';
+    cards.innerHTML = '<div class="empty-state">Error: ' + esc(err.message) + '</div>';
+  })
+  .then(function() {
+    btn.disabled = false;
+    btn.textContent = 'Build sequence →';
+    document.getElementById('campaign-regen-input').value = '';
+  });
+}
+
+// ─── What's Working ──────────────────────────────────────────────────────────
+document.getElementById('whats-working-btn').addEventListener('click', function() {
+  var btn = document.getElementById('whats-working-btn');
+  var out = document.getElementById('whats-working-output');
+  btn.disabled = true;
+  btn.textContent = 'Fetching…';
+  out.innerHTML = '<div class="digest-loading"><span class="loading-dots"><span></span><span></span><span></span></span> Scanning for what\'s working in financial marketing…</div>';
+
+  fetch('/api/whats-working')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var items = data.items || [];
+      if (!items.length) throw new Error('No data returned from sources.');
+      btn.textContent = 'Analyzing…';
+      return fetch('/api/whats-working-digest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: items })
+      }).then(function(r) { return r.json(); });
+    })
+    .then(function(data) {
+      if (data.error) throw new Error(data.error);
+      var text = data.digest || '';
+      var SECTION_META = {
+        'Lead Generation':              { cls: 'leads',   label: 'Lead Generation' },
+        'Sales & Conversion':           { cls: 'sales',   label: 'Sales & Conversion' },
+        'Content & Headlines That Click': { cls: 'content', label: 'Content & Headlines That Click' }
+      };
+
+      var blocks = text.split(/\n###\s+/).filter(Boolean);
+      var html = '<div class="ww-grid">';
+      blocks.forEach(function(block) {
+        var lines   = block.trim().split('\n');
+        var title   = lines[0].replace(/^#+\s*/, '').trim();
+        var meta    = SECTION_META[title] || { cls: 'leads', label: title };
+        var bullets = lines.filter(function(l) { return /^[-•]\s/.test(l.trim()); });
+        var summary = lines.filter(function(l) {
+          var t = l.trim();
+          return t && !/^[-•#]/.test(t);
+        }).join(' ').trim();
+
+        html += '<div class="ww-card">';
+        html += '<div class="ww-card-title ' + meta.cls + '">' + esc(meta.label) + '</div>';
+        if (summary) html += '<p class="ww-summary">' + esc(summary) + '</p>';
+        bullets.forEach(function(b) {
+          html += '<div class="ww-bullet">' + esc(b.replace(/^[-•]\s*/, '').trim()) + '</div>';
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+      out.innerHTML = html;
+      btn.textContent = 'Refresh ↺';
+      btn.disabled = false;
+    })
+    .catch(function(err) {
+      out.innerHTML = '<div class="digest-error">Could not load: ' + esc(err.message) + '. Make sure your Anthropic account has credits.</div>';
+      btn.textContent = 'Load ✦';
+      btn.disabled = false;
+    });
+});
+
+// ─── Image recognition ────────────────────────────────────────────────────────
+document.getElementById('analyze-image-btn').addEventListener('click', function() {
+  var imageUrl = document.getElementById('image-url-input').value.trim();
+  var brand    = document.getElementById('brand-input').value.trim();
+  if (!imageUrl) { document.getElementById('image-url-input').focus(); return; }
+
+  var btn    = document.getElementById('analyze-image-btn');
+  var result = document.getElementById('image-result');
+  var output = document.getElementById('image-analysis-output');
+  btn.disabled = true; btn.textContent = 'Analyzing…';
+  result.style.display = 'block';
+  output.textContent = 'Fetching and analyzing image…';
+
+  fetch('/api/image-analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageUrl: imageUrl, brand: brand || 'Craft Impact or Stephen Beach' })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error);
+    output.textContent = data.analysis || 'No result returned.';
+  })
+  .catch(function(err) {
+    output.textContent = 'Error: ' + err.message + '\n\nTip: Some platforms block server-side image access. Try a direct image URL ending in .jpg or .png.';
+  })
+  .then(function() { btn.disabled = false; btn.textContent = 'Analyze →'; });
+});
+</script>
+</body>
+</html>
