@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from fastapi import APIRouter
+from app.services.anthropic_client import generate_response
 
-from services.anthropic_client import generate
 #/api/generate
 router = APIRouter(prefix="/api", tags=["generate"])
 
@@ -17,7 +17,12 @@ class GenerateResponse(BaseModel):
 @router.post("/generate", response_model=GenerateResponse)    
 def generate(request: GenerateRequest):
     
-    msg = generate(**request.model_dump())#model dump for now..
+    msg = generate_response(
+        system=request.system,
+        user=request.user, 
+        model=request.model,
+        max_tokens=request.max_tokens
+        )
     return GenerateResponse(msg=msg)
 
 

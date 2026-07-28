@@ -1,11 +1,13 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
 
 class Settings(BaseSettings):
-    api_key: str = "sk-ant-api03-esnothererightnow"
+    anthropic_api_key: str #matches ANTHROPIC_API_KEY from 
+                            #.env case-insensitive
 
     model_config = SettingsConfigDict(
-        env_file='.env',
+        env_file=Path(__file__).resolve().parent.parent.joinpath('.env'),
         extra="ignore"
     )
-
+    
 settings = Settings()    

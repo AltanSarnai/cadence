@@ -1,12 +1,12 @@
 from anthropic import Anthropic
-from config import settings
+from app.config import settings
 
 client = Anthropic(
-        api_key=settings.api_key #took out anthropic_ because 
-                                 #in config it is just api_key too
+        api_key=settings.anthropic_api_key 
 )
 
-def generate(system: str, user: str, 
+# TODO add try-catch block.
+def generate_response(system: str, user: str, 
              model: str = "claude-sonnet-4-6", 
              max_tokens: int = 1024) -> str:
     message = client.messages.create(
@@ -22,3 +22,7 @@ def generate(system: str, user: str,
     )
     return "".join(block.text for block in message.content 
         if block.type == "text")
+
+
+def monitor() -> str:
+    return "monitor something"

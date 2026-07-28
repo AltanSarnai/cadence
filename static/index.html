@@ -943,12 +943,12 @@ function generateContent(steer) {
     return fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, system: sys, messages: [{ role: 'user', content: usr }] })
+      body: JSON.stringify({ system: sys, user: usr, model: 'claude-sonnet-4-6', max_tokens: 1000 })
     });
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    var full  = (data.content || []).map(function(i) { return i.text || ''; }).join('');
+    var full  = (data.text || []).map(function(i) { return i.text || ''; }).join('');
     var parts = full.split('---ANGLE---');
     var draft = parts[0].trim();
     draftBox.textContent = draft;
@@ -1360,38 +1360,35 @@ document.getElementById('compliance-btn').addEventListener('click', function() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 600,
       system:
         'You are a compliance reviewer for a registered investment advisor (RIA) marketing firm. ' +
         'You review content against SEC and FINRA marketing rules (SEC Marketing Rule 206(4)-1, FINRA Rule 2210). ' +
-        'Be practical and specific. Flag real risks, not hypothetical ones.',
-      messages: [{
-        role: 'user',
-        content:
-          'Review this draft for SEC/FINRA compliance issues before it is published.\n\n' +
-          'Check for:\n' +
-          '- Performance claims or implied returns (past or future)\n' +
-          '- Guarantees or promises about investment outcomes\n' +
-          '- Testimonials or endorsements without required disclosures\n' +
-          '- Misleading statements about fees, services, or credentials\n' +
-          '- Superlatives ("best", "top", "#1") without substantiation\n' +
-          '- Missing required disclosures for specific claims\n' +
-          '- Cherry-picked results or selective time periods\n\n' +
-          'Output format — start with exactly one of these verdicts on its own line:\n' +
-          'VERDICT: PASS\n' +
-          'VERDICT: CAUTION\n' +
-          'VERDICT: FLAG\n\n' +
-          'Then for CAUTION or FLAG, list each issue as:\n' +
-          'ISSUE: [quoted phrase from draft] — [what the risk is and how to fix it]\n\n' +
-          'End with one sentence of overall guidance.\n\n' +
-          'DRAFT:\n' + draft
-      }]
+        'Be practical and specific. Flag real risks, not hypothetical ones.' +
+        'Review this draft for SEC/FINRA compliance issues before it is published.\n\n' +
+        'Check for:\n' +
+        '- Performance claims or implied returns (past or future)\n' +
+        '- Guarantees or promises about investment outcomes\n' +
+        '- Testimonials or endorsements without required disclosures\n' +
+        '- Misleading statements about fees, services, or credentials\n' +
+        '- Superlatives ("best", "top", "#1") without substantiation\n' +
+        '- Missing required disclosures for specific claims\n' +
+        '- Cherry-picked results or selective time periods\n\n' +
+        'Output format — start with exactly one of these verdicts on its own line:\n' +
+        'VERDICT: PASS\n' +
+        'VERDICT: CAUTION\n' +
+        'VERDICT: FLAG\n\n' +
+        'Then for CAUTION or FLAG, list each issue as:\n' +
+        'ISSUE: [quoted phrase from draft] — [what the risk is and how to fix it]\n\n' +
+        'End with one sentence of overall guidance.\n\n' +
+        'DRAFT:\n' + draft,  
+      user: usr,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 600
     })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    var text = (data.content || []).map(function(i) { return i.text || ''; }).join('').trim();
+    var text = (data.text || []).map(function(i) { return i.text || ''; }).join('').trim();
     if (!text) throw new Error('No response from API. Check your Anthropic credits.');
 
     var verdictMatch = text.match(/VERDICT:\s*(PASS|CAUTION|FLAG)/i);
@@ -1513,11 +1510,11 @@ function buildCampaign(steer) {
   fetch('/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2500, system: sys, messages: [{ role: 'user', content: usr }] })
+    body: JSON.stringify({ system: sys, user: usr, model: 'claude-sonnet-4-6', max_tokens: 2500 })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    var full = (data.content || []).map(function(i) { return i.text || ''; }).join('');
+    var full = (data.text || []).map(function(i) { return i.text || ''; }).join('');
     if (!full) throw new Error('No content returned. Check your Anthropic API credits.');
     lastCampaignText = full;
 
