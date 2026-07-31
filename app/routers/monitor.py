@@ -32,16 +32,3 @@ async def fetch_data(
     total: int 
 
     return MonitorResponse(results = results, total= len(results))
-
-
-'''
-
-Read the query params (q, platforms).
-Split platforms into a list of names.
-Look each name up in the registry → collect the fetcher functions to run (ignore unknowns).
-Fan out — run them all concurrently, m
-Fan in — collect the lists of results.
-Flatten them into one list, sort by date (newest first).
-Return the envelope: {results: [...], total: len(results)}.
-
-'''

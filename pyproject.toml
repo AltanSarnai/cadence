@@ -8,5 +8,6 @@ dependencies = [
     "anthropic>=0.117.0",
     "fastapi>=0.128.8",
     "pydantic-settings>=2.11.0",
+    "sqlalchemy>=2.0.51",
     "uvicorn[standard]>=0.39.0",
 ]
