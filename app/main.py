@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import generate, monitor
+from app.routers import generate, monitor, clients, drafts
 from fastapi.responses import FileResponse
 from pathlib import Path
 
@@ -8,6 +8,8 @@ app = FastAPI(title="Cadence")
 
 app.include_router(generate.router)
 app.include_router(monitor.router)
+app.include_router(clients.router)
+app.include_router(drafts.router)
 
 path = Path(__file__).resolve().parent.parent.joinpath('static/index.html')
 

@@ -2,11 +2,14 @@ from app.database import Base
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from sqlalchemy import create_engine, DateTime, Integer, String, Float, ForeignKey
 from typing import Optional
+from pydantic import ConfigDict
 from datetime import datetime
 
-
+#Database Models
 class Client(Base):
     __tablename__ = "clients"
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
@@ -20,8 +23,9 @@ class Client(Base):
     services: Mapped[Optional[str]] = mapped_column(String)
     specialty: Mapped[Optional[str]] = mapped_column(String)
     typical_topics: Mapped[Optional[str]] = mapped_column(String)
-    content_length: Mapped[Optional[int]]
+    content_length: Mapped[Optional[str]] = mapped_column(String)
     preferred_formats: Mapped[Optional[str]] = mapped_column(String)
+    #ADD Tone.
     #drafts = Mapped[list["drafts"]]= relationship("Draft") 
     '''client = session.query(Client).first()
     print(client.drafts)  

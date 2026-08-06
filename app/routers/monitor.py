@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from fastapi import APIRouter
 from app.services.anthropic_client import monitor
 from app.services.fetch import fetch_mentions
+from typing import Optional
 
 #/api/monitor
 router = APIRouter(prefix = "/api", tags=["monitor"])
@@ -16,7 +17,7 @@ class ItemModel(BaseModel):
     score: int
     meta: str
     date: str
-    url: str
+    url: Optional[str] = None
 
 class MonitorResponse(BaseModel):#, arg1, arg2):
     results: list[ItemModel] 

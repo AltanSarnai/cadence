@@ -300,7 +300,9 @@
       </div>
       <div class="client-switcher">
         <label class="client-switcher-label" for="client-select">Client</label>
-        <select id="client-select" class="client-select"></select>
+        <select id="client-select" class="client-select">
+          <option value="">Select a client...</option>
+        </select> 
       </div>
     </div>
   </header>
@@ -940,11 +942,19 @@ function generateContent(steer) {
       chunks.forEach(function(c) { var ep = c.source.split(' — ')[0]; if (!seen[ep]) { seen[ep] = true; labels.push(ep); } });
       ragSources = labels.join(', ');
     }
-    return fetch('/api/generate', {
+    //${activeClient.id}
+    return fetch(`/api/generate?id=${selectedClient.id}&format=${selectedFormat}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ system: sys, user: usr, model: 'claude-sonnet-4-6', max_tokens: 1000 })
-    });
+    })
+    .then(async res => {
+      if (!res.ok) {
+      const errBody = await res.json();
+      console.error('422 detail:', errBody);
+      };
+  return res;
+});
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
@@ -1673,6 +1683,53 @@ document.getElementById('analyze-image-btn').addEventListener('click', function(
   })
   .then(function() { btn.disabled = false; btn.textContent = 'Analyze →'; });
 });
+
+let selectedClient = null;
+
+// Fetch clients and populate dropdown on page load
+async function loadClients() {
+  try {
+    const response = await fetch("/api/clients");
+    const data = await response.json();
+    const clients = Array.isArray(data) ? data : data.clients;
+    
+    const dropdown = document.getElementById("client-select");
+    
+    // Add each client as an option
+    clients.forEach(client => {
+      const option = document.createElement("option");
+      option.value = client.id;
+      option.textContent = client.name;
+      dropdown.appendChild(option);
+    });
+    
+    // Set activeClient to first client
+    if (clients.length > 0) {
+      selectedClient = clients[0];
+      dropdown.value = clients[0].id;
+    }
+  } catch (error) {
+    console.error("Error loading clients:", error);
+  }
+}
+
+// When user picks a different client, update activeClient
+document.getElementById("client-select").addEventListener("change", function(e) {
+  const clientId = parseInt(e.target.value);
+  // Find the client object from the fetched list
+  fetch("/api/clients")
+    .then(r => r.json())
+    .then(clients => {
+      selectedClient = clients.find(c => c.id === clientId);
+    });
+});
+
+// Call immediately if DOM is ready, or wait if not
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", loadClients);
+} else {
+  loadClients();  // DOM already loaded, call immediately
+}
 </script>
 </body>
 </html>

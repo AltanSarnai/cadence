@@ -6,6 +6,10 @@ dist/
 wheels/
 *.egg-info
 
+#my own notes
+mynotes.md
+
+
 # Virtual environments
 .venv
 .env

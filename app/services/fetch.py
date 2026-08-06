@@ -67,8 +67,8 @@ async def reddit_fetch(q: str, client: str):
    
 
 REGISTRY={
-    "hn": hn_fetch,
-    "reddit": reddit_fetch
+    "hn": hn_fetch
+    #"reddit": reddit_fetch
 }
 
 async def fetch_mentions(q: str, platforms: str):#dict? 
@@ -76,7 +76,7 @@ async def fetch_mentions(q: str, platforms: str):#dict?
   async with httpx.AsyncClient() as client:
     platform_list = platforms.split(",")
     fetchers = [REGISTRY[n] for n in platform_list if n in REGISTRY]
-    platform = re.search(r'[a-z]+_fetch',str(fetchers[0]))# now only gets 1st
+    #platform = re.search(r'[a-z]+_fetch',str(fetchers[0]))# now only gets 1st
 
     L = await asyncio.gather(
       *[f(q, client) for f in fetchers]#or map(f, fetchers) map is better for one iterable
