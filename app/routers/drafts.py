@@ -17,8 +17,8 @@ class CreateDraft(BaseModel):
     content: str
     format: str
     created_at: str = date.today()
-    voice_score: float
-    notes: str
+    voice_score: float = None
+    notes: str = None
     status: str
 
 class DraftResponse(BaseModel):
@@ -41,6 +41,9 @@ class UpdateDraftRequest(BaseModel):
 @router.post("/drafts", response_model=DraftResponse)
 def create_draft(request: CreateDraft):
 
+    vscore = request.voice_score if request.voice_score is not None else 0.0
+    notes = request.notes or ""
+
     with Session.begin() as session:
         draft = Draft(
             client_id=request.client_id,
@@ -48,7 +51,7 @@ def create_draft(request: CreateDraft):
             content= request.content,
             format=request.format,
             created_at= date.today(),
-            voice_score= request.voice_score,#float
+            voice_score= vscore,#float
             notes= request.notes,
             status= request.status 
         )

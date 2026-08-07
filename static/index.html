@@ -392,11 +392,13 @@
       <div class="output-header">
         <span class="output-label">Draft</span>
         <div class="output-actions">
+          <button id="saveDraftBtn" class="action-btn">Save Draft</button>
           <button class="action-btn" id="copy-btn">Copy</button>
           <button class="action-btn" id="regen-btn">Regenerate</button>
           <button class="action-btn" id="compliance-btn">⚖ Compliance check</button>
         </div>
       </div>
+      <div id="generatedContent" class="generated-content" style="display:none"></div>
       <div class="draft-box" id="draft-output" aria-live="polite"></div>
       <div id="char-count" class="char-count"></div>
       <div class="regen-steer" id="regen-steer" style="display:none">
@@ -958,10 +960,15 @@ function generateContent(steer) {
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    var full  = (data.text || []).map(function(i) { return i.text || ''; }).join('');
+    console.log('Data: ' , data);
+
+    var full  = data.message || '';//(data.text || []).map(function(i) { return i.text || ''; }).join('');
     var parts = full.split('---ANGLE---');
     var draft = parts[0].trim();
+    console.log('Setting draft: ' , draft);
+    console.log('draftBox element: ' , draftBox);
     draftBox.textContent = draft;
+    document.getElementById('generatedContent').textContent = draft;
     document.getElementById('char-count').textContent = draft.length + ' characters' + (ragSources ? ' · 🎙️ grounded in ' + ragSources : '');
     if (parts[1]) { document.getElementById('rationale-text').textContent = parts[1].trim(); ratBox.style.display = 'block'; }
   })
@@ -1730,6 +1737,45 @@ if (document.readyState === "loading") {
 } else {
   loadClients();  // DOM already loaded, call immediately
 }
+</script>
+<script>
+document.getElementById("saveDraftBtn").addEventListener("click", async function() {
+  const content = document.getElementById("generatedContent").textContent;
+  
+  if (!content.trim()) {
+    alert("No content to save");
+    return;
+  }
+  
+  if (!selectedClient) {
+    alert("Please select a client first");
+    return;
+  }
+  
+  try {
+    const response = await fetch("/api/drafts", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        client_id: selectedClient.id,
+        content: content,
+        format: selectedFormat,
+        title: `Draft for ${selectedClient.name}`,
+        status: "draft"
+      })
+    });
+    
+    if (response.ok) {
+      const draft = await response.json();
+      alert(`Draft saved! ID: ${draft.id}`);
+    } else {
+      alert("Failed to save draft");
+    }
+  } catch (error) {
+    console.error("Error saving draft:", error);
+    alert("Error saving draft");
+  }
+});
 </script>
 </body>
 </html>

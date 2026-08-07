@@ -13,13 +13,8 @@ class InternalError(Exception):
 def generate_response(system: str, user: str, 
              model: str = "claude-sonnet-4-6", 
              max_tokens: int = 100) -> str:
-    print("\n\n\n\nsystem=")
-    print(system)
-    print("\n\n\n\nuser=")
-
-    print(user)
-    print("\n\n\n\n")
     try:
+        print("\n\n\n\nCalling Anthropic... riiing riiiing.\n")
         message = client.messages.create(
             max_tokens=max_tokens,
             system=system,

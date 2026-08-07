@@ -14,7 +14,7 @@ class GenerateRequest(BaseModel):
     max_tokens: int = 1024
 
 class GenerateResponse(BaseModel):
-    text: str
+    message: str
 
 @router.post("/generate", response_model=GenerateResponse)    
 def generate(id: int, format: str, request: GenerateRequest):
@@ -32,14 +32,16 @@ def generate(id: int, format: str, request: GenerateRequest):
 
         Request: {request.user}
         """
+
         #having tone would be good too
 
-    msg = generate_response(
+    message = generate_response(
         system=request.system,
         user=augment_user, 
         model=request.model,
         max_tokens=request.max_tokens
         )
-    return GenerateResponse(msg=msg)
+
+    return GenerateResponse(message=message)#name of parameter must be name used in Baselmodel
 
 
